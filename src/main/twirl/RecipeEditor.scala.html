@@ -1,0 +1,91 @@
+@import moe.skadic.baeckertwo.data.Recipe
+@import io.circe.syntax.EncoderOps
+@import io.circe.generic.auto._
+@(recipe: Option[Recipe], id: Option[Int])
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Edit Recipe</title>
+    </head>
+    <script defer>
+            let recipe = {
+                @if(recipe.isDefined) {
+                    name: "@recipe.map(_.name).getOrElse("")",
+                    ingredients: JSON.parse(`@recipe.get.ingredients.asJson.toString()`.replaceAll("&quot;", "\"")),
+                    steps: JSON.parse(`@recipe.get.steps.asJson.toString()`.replaceAll("&quot;", "\""))
+                } else {
+                    name: undefined,
+                    ingredients: [],
+                    steps: []
+                },
+            }
+            @if(id.isDefined) {
+                recipe.id = @id.get
+            }
+
+            function addIngredient() {
+                let ingredient = {}
+                ingredient.name = document.getElementById("inputIngName").value;
+                ingredient.amount = document.getElementById("inputIngAmount").value;
+                ingredient.unit = document.getElementById("inputIngUnit").value;
+                document.getElementById("inputIngName").value = "";
+                document.getElementById("inputIngAmount").value = 0;
+                document.getElementById("inputIngUnit").value = "";
+                recipe.ingredients.push(ingredient)
+
+                let ingElem = document.createElement("li")
+                let bElem = document.createElement("b")
+                bElem.textContent = ingredient.name
+                let spanElem = document.createElement("span")
+                spanElem.textContent = `: ${ingredient.amount} ${ingredient.unit}`
+                ingElem.appendChild(bElem)
+                ingElem.appendChild(spanElem)
+                document.getElementById("ingredientList").appendChild(ingElem)
+            }
+
+            function addStep() {
+                recipe.steps.push(document.getElementById("inputStep").value)
+                document.getElementById("inputStep").value = ""
+                let ingElem = document.createElement("li")
+                ingElem.textContent = recipe.steps[recipe.steps.length - 1]
+                document.getElementById("stepList").appendChild(ingElem)
+            }
+
+            async function save() {
+                recipe.name = document.getElementById("inputTitle").value
+                await fetch("/recipe", {
+                    method: "POST",
+                    body: JSON.stringify(recipe)
+                })
+                window.location.href = "/recipe/list";
+            }
+    </script>
+
+    <body>
+
+        <h1>Edit Recipe</h1>
+        <h3>Title</h3>
+        <input id="inputTitle" type="text" placeholder="Title" value="@recipe.map(_.name).getOrElse("")">
+        <h3>Ingredients</h3>
+        <ul id="ingredientList">
+        @for(ingredient <- recipe.map(_.ingredients).getOrElse(List())) {
+            <li><b>@ingredient.name</b>: @ingredient.amount @ingredient.unit</li>
+        }
+        </ul>
+        <input id="inputIngName" type="text" placeholder="Name">
+        <input id="inputIngAmount" type="number" placeholder="Amount">
+        <input id="inputIngUnit" type="text" placeholder="Unit">
+        <button onclick="addIngredient()">Add</button>
+        <h3>Steps</h3>
+        <ol id="stepList">
+        @for(step <- recipe.map(_.steps).getOrElse(List())) {
+            <li>@step</li>
+        }
+        </ol>
+        <input id="inputStep" type="text" placeholder="Unit">
+        <button onclick="addStep()">Add</button>
+
+        <button onclick="save()">Save</button>
+    </body>
+</html>

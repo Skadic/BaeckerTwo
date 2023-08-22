@@ -1,0 +1,25 @@
+@import moe.skadic.baeckertwo.data.Recipe
+@(recipe: Recipe)
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>@recipe.name</title>
+    </head>
+    <body>
+        <h1>@recipe.name</h1>
+        <h2>Ingredients</h2>
+        <ul>
+        @for(ingredient <- recipe.ingredients) {
+            <li><b>@ingredient.name</b>: @ingredient.amount @ingredient.unit</li>
+        }
+        </ul>
+        <h2>Steps</h2>
+        <ol>
+        @for(step <- recipe.steps) {
+            <li>@step</li>
+        }
+        </ol>
+        <a href="/recipe/list">Back</a>
+    </body>
+</html>
